@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./db/init:/docker-entrypoint-initdb.d
+      - ./db/my.cnf:/etc/mysql/conf.d/my.cnf
+    ports:
+      - $DB_PORT:3306
+    environment:
+      TZ: Asia/Tokyo
+      MYSQL_ROOT_PASSWORD: $DB_ROOTPASS
+      MYSQL_DATABASE: $DB_DATABASE
+      MYSQL_USER: $DB_USERNAME
+      MYSQL_PASSWORD: $DB_PASSWORD
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: /bin/sh
+    volumes:
+      - .:/app
+    ports:
+      - $APP_PORT:3000
+    environment:
+      - NODE_ENV=development
+      # nodemon用に設定（ts-node-devを使用する場合は--pollオプションがあるため不要）
+      - CHOKIDAR_USEPOLLING=1
+    tty: true
+    depends_on:
+      - db
+
+volumes:
+  db_data:
